@@ -1,5 +1,5 @@
 import streamlit as st
-from fpdf import FPDF
+from fpdf2 import FPDF2
 from datetime import date
 import pycountry
 import os
