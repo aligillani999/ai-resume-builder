@@ -1,8 +1,3 @@
-import streamlit as st
-from datetime import date
-import pycountry
-import os
-
 # ================= PAGE CONFIG =================
 st.set_page_config(
     page_title="Gillani AI Resume Studio Pro",
