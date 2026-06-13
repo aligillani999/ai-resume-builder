@@ -1,5 +1,5 @@
 import streamlit as st
-from fpdf2 import FPDF2
+from pdf import PDF
 from datetime import date
 import pycountry
 import os
@@ -155,7 +155,7 @@ if st.button("🚀 Generate CV Preview"):
 # ================= PDF GENERATION (FIXED) =================
 if st.button("📄 Download CV PDF"):
 
-    pdf = FPDF()
+    pdf = PDF()
     pdf.add_page()
 
     # TITLE
