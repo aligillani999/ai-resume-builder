@@ -1,9 +1,8 @@
-import reportlab
 import streamlit as st
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
+from fpdf import FPDF
 from datetime import date
 import pycountry
+import os
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
@@ -12,7 +11,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# ================= UI STYLE FIX =================
+# ================= UI STYLE =================
 st.markdown("""
 <style>
 .main {
@@ -20,7 +19,6 @@ st.markdown("""
     color: white;
 }
 
-/* Buttons text fix (IMPORTANT) */
 .stButton>button {
     background-color: #22c55e;
     color: black !important;
@@ -35,7 +33,7 @@ st.markdown("""
 
 # ================= HEADER =================
 st.title("💼 Gillani AI Resume Studio Pro")
-st.markdown("### Professional AI CV Builder (Fixed Version)")
+st.markdown("### Professional AI CV Builder (Stable Version)")
 st.divider()
 
 # ================= PHOTO =================
@@ -154,120 +152,86 @@ if st.button("🚀 Generate CV Preview"):
 
     st.success("CV Generated Successfully 🚀")
 
-# ================= PDF GENERATION =================
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-
-def write_line(c, text, x, y, max_width=90):
-    """
-    Safe text writer (prevents overflow)
-    """
-    lines = []
-    words = text.split(" ")
-    current = ""
-
-    for word in words:
-        if len(current + " " + word) < max_width:
-            current += " " + word
-        else:
-            lines.append(current)
-            current = word
-    lines.append(current)
-
-    for line in lines:
-        c.drawString(x, y, line.strip())
-        y -= 15
-
-    return y
-
-
+# ================= PDF GENERATION (FIXED) =================
 if st.button("📄 Download CV PDF"):
 
-    c = canvas.Canvas("cv.pdf", pagesize=A4)
-    width, height = A4
+    pdf = FPDF()
+    pdf.add_page()
 
-    x = 50
-    y = height - 50
+    # TITLE
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(200, 10, "GILLANI AI RESUME STUDIO PRO", ln=True)
 
-    # ================= HEADER =================
-    c.setFont("Helvetica-Bold", 18)
-    c.drawString(x, y, "GILLANI AI RESUME STUDIO PRO")
-    y -= 25
+    pdf.set_font("Arial", "", 12)
+    pdf.cell(200, 10, "Professional AI Generated CV", ln=True)
+    pdf.ln(5)
 
-    c.setFont("Helvetica", 10)
-    c.drawString(x, y, "Professional AI Generated CV")
-    y -= 40
-
-    # ================= PHOTO =================
+    # PHOTO
     if photo is not None:
-        with open("temp.jpg", "wb") as f:
+        image_path = "temp.jpg"
+        with open(image_path, "wb") as f:
             f.write(photo.read())
-        c.drawImage("temp.jpg", 420, height - 150, width=120, height=120)
+        pdf.image(image_path, x=160, y=10, w=40)
 
-    # ================= PERSONAL INFO =================
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(x, y, "PERSONAL INFORMATION")
-    y -= 20
+    # INFO
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(200, 10, "PERSONAL INFORMATION", ln=True)
 
-    c.setFont("Helvetica", 10)
-    y = write_line(c, f"Name: {name}", x, y)
-    y = write_line(c, f"Job: {job}", x, y)
-    y = write_line(c, f"Email: {email}", x, y)
-    y = write_line(c, f"Phone: {phone}", x, y)
-    y = write_line(c, f"Nationality: {nationality}", x, y)
+    pdf.set_font("Arial", "", 11)
+    pdf.cell(200, 8, f"Name: {name}", ln=True)
+    pdf.cell(200, 8, f"Job: {job}", ln=True)
+    pdf.cell(200, 8, f"Email: {email}", ln=True)
+    pdf.cell(200, 8, f"Phone: {phone}", ln=True)
+    pdf.cell(200, 8, f"Nationality: {nationality}", ln=True)
 
-    y -= 10
+    pdf.ln(3)
 
-    # ================= SUMMARY =================
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(x, y, "PROFESSIONAL SUMMARY")
-    y -= 20
+    # SUMMARY
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(200, 10, "SUMMARY", ln=True)
 
-    c.setFont("Helvetica", 10)
-    y = write_line(c, summary, x, y)
+    pdf.set_font("Arial", "", 11)
+    pdf.multi_cell(0, 8, summary)
 
-    y -= 10
+    pdf.ln(3)
 
-    # ================= EDUCATION =================
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(x, y, "EDUCATION")
-    y -= 20
+    # EDUCATION
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(200, 10, "EDUCATION", ln=True)
 
-    c.setFont("Helvetica", 10)
-    y = write_line(c, f"{degree} - {edu_school}", x, y)
-    y = write_line(c, f"{edu_start} to {edu_end}", x, y)
+    pdf.set_font("Arial", "", 11)
+    pdf.cell(200, 8, f"{degree} - {edu_school}", ln=True)
+    pdf.cell(200, 8, f"{edu_start} to {edu_end}", ln=True)
 
-    y -= 10
+    pdf.ln(3)
 
-    # ================= EXPERIENCE =================
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(x, y, "EXPERIENCE")
-    y -= 20
+    # EXPERIENCE
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(200, 10, "EXPERIENCE", ln=True)
 
-    c.setFont("Helvetica", 10)
-    y = write_line(c, f"{position} - {employer} ({city})", x, y)
-    y = write_line(c, f"{exp_start} to {exp_end}", x, y)
+    pdf.set_font("Arial", "", 11)
+    pdf.cell(200, 8, f"{position} - {employer}", ln=True)
+    pdf.cell(200, 8, f"{city}", ln=True)
+    pdf.cell(200, 8, f"{exp_start} to {exp_end}", ln=True)
 
-    y -= 10
+    pdf.ln(3)
 
-    # ================= SKILLS =================
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(x, y, "SKILLS")
-    y -= 20
+    # SKILLS
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(200, 10, "SKILLS", ln=True)
 
-    c.setFont("Helvetica", 10)
-    y = write_line(c, ", ".join(skills), x, y)
+    pdf.set_font("Arial", "", 11)
+    pdf.multi_cell(0, 8, ", ".join(skills))
 
-    y -= 10
+    pdf.ln(3)
 
-    # ================= LANGUAGES =================
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(x, y, "LANGUAGES")
-    y -= 20
+    # LANGUAGES
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(200, 10, "LANGUAGES", ln=True)
 
-    c.setFont("Helvetica", 10)
-    y = write_line(c, ", ".join(languages), x, y)
+    pdf.set_font("Arial", "", 11)
+    pdf.multi_cell(0, 8, ", ".join(languages))
 
-    c.save()
+    pdf.output("cv.pdf")
 
     st.success("Professional CV PDF Generated Successfully 🚀")
