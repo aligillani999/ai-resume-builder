@@ -1,5 +1,4 @@
 import streamlit as st
-from pdf import PDF
 from datetime import date
 import pycountry
 import os
